@@ -11,6 +11,15 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [
+    'uses' => 'BlogController@index', 
+    'as' => 'Blog'
+]);
+
+Auth::routes();
+
+Route::get('/dashboard', 'HomeController@index');
+
+Route::resource('/dashboard/blog', 'Backend\BlogController', [
+    'as' => 'backend'
+]);
