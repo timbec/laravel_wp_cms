@@ -32,6 +32,8 @@
                 </div>
                 <!-- /.box-header -->
                 <div class="box-body ">
+                @include('backend.blog.message');
+
                     @if (! $posts->count())
                         <div class="alert alert-danger">
                             <strong>No record found</strong>
@@ -52,12 +54,20 @@
 
                                     <tr>
                                         <td>
+                                        {!! Form::open(['method' => 'DELETE', 'route' => ['backend.blog.destroy', $post->id]]) !!}
                                             <a href="{{ route('backend.blog.edit', $post->id) }}" class="btn btn-xs btn-default">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+                                            <button type="submit" class="btn btn-xs btn-danger">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        {!! Form::close() !!}
+                                            <!-- <a href="{{ route('backend.blog.edit', $post->id) }}" class="btn btn-xs btn-default">
                                                 <i class="fa fa-edit"></i>
                                             </a>
                                             <a href="{{ route('backend.blog.destroy', $post->id) }}" class="btn btn-xs btn-danger">
                                                 <i class="fa fa-times"></i>
-                                            </a>
+                                            </a> -->
                                         </td>
                                         <td>{{ $post->title }}</td>
                                         <td>{{ $post->author->name }}</td>

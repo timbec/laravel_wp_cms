@@ -19,9 +19,4 @@ class BlogController extends Controller
         return view('welcome', compact('posts'));
     }
 
-    /** 
-     * 
-     * 
-     * 
-     */
 }
