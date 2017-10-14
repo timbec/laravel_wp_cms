@@ -37,3 +37,13 @@ Route::resource('/dashboard/blog', 'Backend\BlogController', [
 Route::resource('/dashboard/categories', 'Backend\CategoriesController', [
     'as' => 'backend'
 ]);
+
+Route::get('/backend/users/confirm/{users}', [
+    'uses' => 'Backend\UsersController@confirm', 
+    'as' => 'backend.users.confirm'
+]);
+
+Route::resource('/dashboard/users', 'Backend\UsersController', [
+    'as' => 'backend'
+]);
+
