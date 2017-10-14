@@ -2,10 +2,14 @@
 
 namespace App;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Post extends Model
 {
+    use SoftDeletes; 
+
     protected $fillable = ['title', 'slug', 'excerpt', 'body', 'published_at','category_id', 'image'];
 
     protected $dates = ['published_at'];
@@ -71,6 +75,31 @@ class Post extends Model
         }
 
         return $imageUrl;
+    }
+
+    public function scopeLatestFirst($query)
+    {
+        return $query->orderBy('published_at', 'desc');
+    }
+
+    public function scopePopular($query)
+    {
+        return $query->orderBy('view_count', 'desc');
+    }
+
+    public function scopePublished($query)
+    {
+        return $query->where("published_at", "<=", Carbon::now());
+    }
+
+    public function scopeScheduled($query)
+    {
+        return $query->where("published_at", ">", Carbon::now());
+    }
+
+    public function scopeDraft($query)
+    {
+        return $query->whereNull("published_at");
     }
 
 }

@@ -9,7 +9,6 @@ use Intervention\Image\Facades\Image;
 
 class BlogController extends BackendController
 {
-    protected $limit = 5; 
     protected $uploadPath; 
 
     public function __construct()
@@ -23,12 +22,51 @@ class BlogController extends BackendController
      * @return \Illuminate\Htpp\Response
      *
      */
-    public function index()
+    public function index(Request $request)
     {
-        $posts = Post::with('category', 'author')->latest()->paginate($this->limit);
+        $onlyTrashed = FALSE; 
 
-        $postCount = Post::count();
-        return view('backend.blog.index', compact('posts', 'postCount'));
+        if (($status = $request->get('status')) && $status == 'trash')
+        {
+            $posts       = Post::onlyTrashed()->with('category', 'author')->latest()->paginate($this->limit);
+            $postCount   = Post::onlyTrashed()->count();
+            $onlyTrashed = TRUE;
+        }
+        elseif ($status == 'published')
+        {
+            $posts       = Post::published()->with('category', 'author')->latest()->paginate($this->limit);
+            $postCount   = Post::published()->count();
+        }
+        elseif ($status == 'scheduled')
+        {
+            $posts       = Post::scheduled()->with('category', 'author')->latest()->paginate($this->limit);
+            $postCount   = Post::scheduled()->count();
+        }
+        elseif ($status == 'draft')
+        {
+            $posts       = Post::draft()->with('category', 'author')->latest()->paginate($this->limit);
+            $postCount   = Post::draft()->count();
+        }
+        else
+        {
+            $posts       = Post::with('category', 'author')->latest()->paginate($this->limit);
+            $postCount   = Post::count();
+        }
+       
+        $statusList = $this->statusList(); 
+
+        return view('backend.blog.index', compact('posts', 'postCount', 'onlyTrashed', 'statusList'));
+    }
+
+    private function statusList() 
+    {
+        return [
+            'all' => Post::count(),
+            'published' => Post::published()->count(),
+            'scheduled' => Post::scheduled()->count(),
+            'draft'     => Post::draft()->count(), 
+            'trash'     => Post::onlyTrashed()->count()
+        ];
     }
 
     public function create(Post $post)
@@ -116,7 +154,11 @@ class BlogController extends BackendController
     {
         $post = Post::findOrFail($id); 
         $data = $this->handleRequest($request);
+        $oldImage = $post->image; 
         $post->update($data);
+        if($oldImage !== $post->image) {
+            $this->removeImage($oldImage);
+        }
         return redirect('dashboard/blog')->with('message', 'Your post was updated successfully');
     }
 
@@ -132,6 +174,38 @@ class BlogController extends BackendController
 
        $post->delete(); 
 
-        return redirect('/dashboard/blog')->with('message', 'Your post was successfully deleted!');
+        return redirect('/dashboard/blog')->with('trash-message', ['Your post was moved to Trash', $id]);
+    }
+
+    public function forceDestroy($id)
+    {
+        $post = Post::withTrashed()->findOrFail($id);
+        $post->forceDelete();
+
+        $this->removeImage($post->image);
+
+        return redirect('/dashboard/blog?status=trash')->with('message', 'Your post has been deleted successfully');
+    }
+
+    public function restore($id)
+    {
+        $post = Post::withTrashed()->findOrFail($id); 
+        $post->restore();
+
+        return redirect()->back()->with('message', 'Your post has been restored from Tash');
+    }
+
+    public function removeImage($image)
+    {
+        if( !empty($image) ) 
+        {
+            $imagePath = $this->uploadPath . '/' . $image; 
+           $ext = substr(strrchr($image, ','), 1);
+           $thumbnail = str_replace(".{$ext}", "_thumb.{$ext}", $image);
+           $thumbnailPath = $this->uploadPath . '/' . $thumbnail; 
+
+            if ( file_exists($imagePath) ) unlink($imagePath);
+            if ( file_exists($thumbnailPath) ) unlink($thumbnailPath);
+        }
     }
 }
