@@ -18,7 +18,9 @@ Route::get('/', [
 
 Auth::routes();
 
-Route::get('/dashboard', 'HomeController@index');
+Route::get('/dashboard', 'Backend\HomeController@index');
+Route::get('/edit-account', 'Backend\HomeController@edit');
+Route::put('/edit-account', 'Backend\HomeController@update');
 
 Route::put('/dashboard/blog/restore/{blog}', [
     'uses' => 'Backend\BlogController@restore',

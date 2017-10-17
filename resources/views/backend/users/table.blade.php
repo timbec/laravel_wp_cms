@@ -28,7 +28,9 @@
                 </td>
                 <td>{{ $user->name }}</td>
                 <td>{{ $user->email }}</td>
-                <td>-</td>
+                @if( $user->roles->first() != '' )
+                <td>{{ $user->roles->first()->display_name }}</td>
+                @endif
             </tr>
 
         @endforeach
